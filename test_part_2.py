@@ -1,7 +1,6 @@
 '''
 This module is to show how unit testing works using the unittest library.
-Testing the functions that interact with MySQL would require mocking a database
-and since I haven't done it before it would take me longer.
+Testing the functions that interact with MySQL would require mocking a database.
 '''
 
 import os, sys
