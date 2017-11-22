@@ -4,7 +4,6 @@ import pandas as pd
 
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
-#sys.path.append(r'C:\Users\Mario\Google Drive\MySQL')
 
 import bq_module
 import sql_module
@@ -18,26 +17,33 @@ temp	FLOAT	NULLABLE	Mean temperature for the day in degrees Fahrenheit to tenths
 '''
 
 ''' This function writes the SQL query to produce the desired table '''
-def get_qry_for_states():
-    sql_query = ''
-    sql_query+= 'SELECT country, state, MIN(ROUND((temp-32)*5/9,1)) min_celsius, MAX(ROUND((temp-32)*5/9,1)) max_celsius '
-    sql_query+= 'FROM ('
-    sql_query+= '      SELECT stn, year, temp, state, country '
-    sql_query+= '      FROM ('
-    sql_query+= '            SELECT stn, year, temp '
-    sql_query+= '            FROM TABLE_QUERY([bigquery-public-data:noaa_gsod], \'table_id CONTAINS "gsod"\') '
-    sql_query+= '            WHERE (year LIKE \'199%\' OR year = \'2000\') AND temp != 9999.9 '
-    sql_query+= '           ) a '
-    sql_query+= '      JOIN [bigquery-public-data:noaa_gsod.stations] b '
-    #sql_query+= '      ON a.stn=b.usaf AND a.wban=b.wban '
-    sql_query+= '      ON a.stn=b.usaf '
-    sql_query+= '      WHERE state IS NOT NULL AND state != \'\' AND country = \'US\' '
-    sql_query+= '     ) '
-    sql_query+= 'GROUP BY country, state '
-    sql_query+= 'ORDER BY state ASC '
-    #sql_query+= 'LIMIT 100 '
-    sql_query+= ';'
-    return sql_query
+sql_query = ''
+sql_query+= 'SELECT country, state, MIN(ROUND((temp-32)*5/9,1)) min_celsius, MAX(ROUND((temp-32)*5/9,1)) max_celsius '
+sql_query+= 'FROM ('
+sql_query+= '      SELECT stn, year, temp, state, country '
+sql_query+= '      FROM ('
+sql_query+= '            SELECT stn, year, temp '
+sql_query+= '            FROM TABLE_QUERY([bigquery-public-data:noaa_gsod], \'table_id CONTAINS "gsod"\') '
+sql_query+= '            WHERE (year LIKE \'199%\' OR year = \'2000\') AND temp != 9999.9 '
+sql_query+= '           ) a '
+sql_query+= '      JOIN [bigquery-public-data:noaa_gsod.stations] b '
+#sql_query+= '      ON a.stn=b.usaf AND a.wban=b.wban '
+sql_query+= '      ON a.stn=b.usaf '
+sql_query+= '      WHERE state IS NOT NULL AND state != \'\' AND country = \'US\' '
+sql_query+= '     ) '
+sql_query+= 'GROUP BY country, state '
+sql_query+= 'ORDER BY state ASC '
+#sql_query+= 'LIMIT 100 '
+sql_query+= ';'
+
+''' This function writes the SQL query to create the empty destination table in MySQL '''
+sql_query = ''
+sql_query+=('CREATE TABLE final ( ')
+sql_query+=('country VARCHAR(2) NOT NULL, ')
+sql_query+=('state VARCHAR(2) NOT NULL, ')
+sql_query+=('min_celsius FLOAT, ')
+sql_query+=('max_celsius FLOAT, ')
+sql_query+=('PRIMARY KEY (country, state) ) ')
 
 ''' This function builds a Pandas dataframe with the result '''
 def build_dataframe(data):
@@ -47,17 +53,6 @@ def build_dataframe(data):
         i+=1  
         df.loc[i] = [row[0],row[1],row[2],row[3]]
     return df
-
-''' This function writes the SQL query to create the empty destination table in MySQL '''
-def get_qry_to_create_tbl():
-    sql_query = ''
-    sql_query+=('CREATE TABLE final ( ')
-    sql_query+=('country VARCHAR(2) NOT NULL, ')
-    sql_query+=('state VARCHAR(2) NOT NULL, ')
-    sql_query+=('min_celsius FLOAT, ')
-    sql_query+=('max_celsius FLOAT, ')
-    sql_query+=('PRIMARY KEY (country, state) ) ')    
-    return sql_query
 
 ''' This function reads the dataframe and writes the SQL query to
 load the rows in the destination table '''
@@ -76,7 +71,6 @@ def build_qry_from_df(df, destination_tbl):
         sql_query_full += sql_query    
     return sql_query_full
     
-
 
 if __name__ == '__main__':
     print('Process started')
@@ -118,9 +112,3 @@ if __name__ == '__main__':
         
     print('Process ended')
     
-    
-
-
-
-
-
